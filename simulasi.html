@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Simulasi Spooling Printer</title>
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #adc2f7, #eef4ff);
+    padding: 30px;
+    text-align: center;
+  }
+
+  h1 {
+    margin-bottom: 10px;
+  }
+
+  .controls {
+    margin-bottom: 20px;
+  }
+
+  button {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 18px;
+    margin: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  button:hover { background-color: #357ABD; }
+
+  .printer {
+    font-weight: bold;
+    margin: 15px 0;
+  }
+
+  .queue {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+  }
+
+  .doc {
+    width: 60px;
+    height: 60px;
+    background: #6fa8dc;
+    color: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    transition: background 0.3s;
+  }
+
+  .doc.printing {
+    background: #ff7f50;
+  }
+
+  .log {
+    width: 80%;
+    margin: 0 auto;
+    text-align: left;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 10px;
+    height: 150px;
+    overflow-y: auto;
+    font-size: 0.9em;
+  }
+</style>
+</head>
+<body>
+
+<h1>Simulasi Spooling Printer</h1>
+
+<div class="controls">
+  <button onclick="addDocument()">➕ Tambah Dokumen</button>
+  <button onclick="startSpooling()">▶ Mulai</button>
+  <button onclick="pauseSpooling()">⏸ Jeda</button>
+  <button onclick="resetSpooling()">🔄 Reset</button>
+</div>
+
+<div class="printer">Status Printer: <span id="printerStatus">Idle</span></div>
+
+<div class="queue" id="printerQueue"></div>
+
+<div class="log" id="spoolLog"></div>
+
+<script>
+let printerQueue = [];
+let printerBusy = false;
+let spoolInterval;
+let docCounter = 1;
+
+function addDocument() {
+  const docId = "Dokumen" + docCounter++;
+  printerQueue.push({ id: docId, status: "waiting" });
+  renderQueue();
+  log(`📄 ${docId} ditambahkan ke antrian`);
+}
+
+function renderQueue() {
+  const container = document.getElementById("printerQueue");
+  container.innerHTML = "";
+  printerQueue.forEach(doc => {
+    const div = document.createElement("div");
+    div.className = "doc";
+    if (doc.status === "printing") div.classList.add("printing");
+    div.textContent = doc.id;
+    container.appendChild(div);
+  });
+}
+
+function spooler() {
+  if (!printerBusy && printerQueue.length > 0) {
+    const currentDoc = printerQueue.shift();
+    currentDoc.status = "printing";
+    printerBusy = true;
+    document.getElementById("printerStatus").textContent = "Busy";
+    log(`🖨️ Mencetak ${currentDoc.id}...`);
+    renderQueue();
+
+    setTimeout(() => {
+      printerBusy = false;
+      document.getElementById("printerStatus").textContent = "Idle";
+      log(`✅ ${currentDoc.id} selesai dicetak`);
+      renderQueue();
+    }, 2000);
+  }
+}
+
+function startSpooling() {
+  if (!spoolInterval) {
+    spoolInterval = setInterval(spooler, 2500);
+    log("▶ Printer dijalankan");
+  }
+}
+
+function pauseSpooling() {
+  clearInterval(spoolInterval);
+  spoolInterval = null;
+  log("⏸ Printer dijeda");
+}
+
+function resetSpooling() {
+  location.reload();
+}
+
+function log(message) {
+  const logBox = document.getElementById("spoolLog");
+  logBox.innerHTML += message + "<br>";
+  logBox.scrollTop = logBox.scrollHeight;
+}
+</script>
+
+</body>
+</html>
